@@ -1,0 +1,50 @@
+// schema.prisma for PIPPIT CREATION
+// Targets PostgreSQL (Neon in prod, local docker in dev)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AssetStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+model Asset {
+  id          String      @id @default(cuid())
+
+  /// S3 object key — e.g. "characters/abc123-1234567890.png"
+  key         String      @unique
+
+  /// CloudFront / MinIO public URL — null until status is READY
+  publicUrl   String?
+
+  /// WebP thumbnail URL — null until Sharp processing is complete
+  thumbUrl    String?
+
+  filename    String
+  contentType String
+  sizeBytes   Int
+  folder      String      // "characters" | "frames" | "misc"
+
+  /// PENDING: presign generated, waiting for browser PUT
+  /// READY:   uploaded + thumbnail generated successfully
+  /// FAILED:  processing error — see metadata.error
+  status      AssetStatus @default(PENDING)
+
+  /// Free-form metadata: { width, height, format, thumbSizeBytes, error, tags, … }
+  metadata    Json?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([folder])
+  @@index([status])
+  @@index([createdAt])
+}
