@@ -1,0 +1,47 @@
+{
+  "family": "pippit-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/pippit-ecs-task-execution",
+  "taskRoleArn":      "arn:aws:iam::ACCOUNT_ID:role/pippit-ecs-task",
+  "containerDefinitions": [
+    {
+      "name": "api",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/pippit/api:latest",
+      "portMappings": [
+        { "containerPort": 4000, "protocol": "tcp" }
+      ],
+      "secrets": [
+        { "name": "DATABASE_URL",          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:pippit/prod:DATABASE_URL::" },
+        { "name": "REDIS_URL",             "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:pippit/prod:REDIS_URL::" },
+        { "name": "AWS_ACCESS_KEY_ID",     "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:pippit/prod:AWS_ACCESS_KEY_ID::" },
+        { "name": "AWS_SECRET_ACCESS_KEY", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:pippit/prod:AWS_SECRET_ACCESS_KEY::" },
+        { "name": "S3_BUCKET_NAME",        "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:pippit/prod:S3_BUCKET_NAME::" },
+        { "name": "CLOUDFRONT_DOMAIN",     "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:pippit/prod:CLOUDFRONT_DOMAIN::" },
+        { "name": "CORS_ORIGIN",           "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:pippit/prod:CORS_ORIGIN::" }
+      ],
+      "environment": [
+        { "name": "NODE_ENV",   "value": "production" },
+        { "name": "API_PORT",   "value": "4000" },
+        { "name": "AWS_REGION", "value": "us-east-1" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group":         "/ecs/pippit",
+          "awslogs-region":        "REGION",
+          "awslogs-stream-prefix": "api"
+        }
+      },
+      "healthCheck": {
+        "command":     ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"],
+        "interval":    30,
+        "timeout":     5,
+        "retries":     3,
+        "startPeriod": 15
+      }
+    }
+  ]
+}
