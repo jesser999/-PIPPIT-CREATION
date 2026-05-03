@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowPresignedPut",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject"],
+      "Resource": "arn:aws:s3:::pippit-creation-assets/*"
+    },
+    {
+      "Sid": "AllowApiRead",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:HeadObject"],
+      "Resource": "arn:aws:s3:::pippit-creation-assets/*"
+    },
+    {
+      "Sid": "AllowBucketList",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::pippit-creation-assets"
+    }
+  ]
+}
